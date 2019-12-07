@@ -1,5 +1,5 @@
 name: 'Setup Maven'
-description: 'Installs Apache Maven and add it to the PATH'
+description: 'Install Apache Maven and add it to the PATH'
 author: 'stCarolas'
 inputs:
   maven-version:
