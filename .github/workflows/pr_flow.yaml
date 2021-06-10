@@ -20,4 +20,4 @@ jobs:
         run: java -version
       - uses: vk-org/setup-maven@master
         with:
-          maven-version: 3.8.3
+          maven-version: 3.8.1
