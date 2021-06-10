@@ -3,6 +3,7 @@ name: "Build and test maven GitHub action"
 on:
   pull_request:
     branches: [ master ]
+  push:
 
 jobs:
   build:
@@ -16,7 +17,7 @@ jobs:
           node-version: 12
       - run: npm install
       - run: npm run build
-      - run: npm run build-distr
+      - run: npm run build-dist
       - name: "Set up JDK"
         uses: actions/setup-java@v2
         with:
