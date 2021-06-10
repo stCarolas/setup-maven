@@ -7,6 +7,7 @@ on:
 
 jobs:
   build:
+    name: "Set up Maven and validate"
     runs-on: ubuntu-latest
     strategy:
       matrix:
