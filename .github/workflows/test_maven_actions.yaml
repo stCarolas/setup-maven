@@ -17,7 +17,7 @@ jobs:
           distribution: 'adopt'
       - name: "Verify Java version"
         run: java -version
-      - uses: vk-org/setup-maven@master
+      - uses: ${{ github.repository_owner }}/setup-maven@master
         with:
           maven-version: 3.8.1
       - run: mvn -v
