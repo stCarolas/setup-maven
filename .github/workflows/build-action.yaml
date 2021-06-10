@@ -29,5 +29,5 @@ jobs:
           distribution: "adopt"
       - uses: ./
         with:
-          maven-version: ${{ matrix.maven_version }
+          maven-version: ${{ matrix.maven_version }}
       - run: mvn -v
