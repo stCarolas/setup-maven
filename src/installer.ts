@@ -32,17 +32,16 @@ export async function getMaven(version: string) {
 }
 
 async function downloadMaven(version: string): Promise<string> {
-  const toolDirectoryName = `apache-maven-${version}`
-  const downloadUrl =
-    `https://apache.org/dyn/closer.cgi?filename=maven/maven-3/${version}/binaries/${toolDirectoryName}-bin.tar.gz&action=download`
-  console.log(`downloading ${downloadUrl}`)
+  const toolDirectoryName = `apache-maven-${version}`;
+  const downloadUrl = `https://apache.org/dyn/closer.cgi?filename=maven/maven-3/${version}/binaries/${toolDirectoryName}-bin.tar.gz&action=download`;
+  console.log(`downloading ${downloadUrl}`);
 
   try {
-    const downloadPath = await tc.downloadTool(downloadUrl)
-    const extractedPath = await tc.extractTar(downloadPath)
-    let toolRoot = path.join(extractedPath, toolDirectoryName)
-    return await tc.cacheDir(toolRoot, 'maven', version)
+    const downloadPath = await tc.downloadTool(downloadUrl);
+    const extractedPath = await tc.extractTar(downloadPath);
+    let toolRoot = path.join(extractedPath, toolDirectoryName);
+    return await tc.cacheDir(toolRoot, 'maven', version);
   } catch (err) {
-    throw err
+    throw err;
   }
 }
