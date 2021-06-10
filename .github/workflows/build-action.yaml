@@ -1,22 +1,30 @@
-name: Node.js CI
+name: "Build and test maven GitHub action"
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Set Node.js
         uses: actions/setup-node@v1
         with:
           node-version: 12
       - run: npm install
       - run: npm run build
       - run: npm run build-distr
+      - name: "Set up JDK"
+        uses: actions/setup-java@v2
+        with:
+          java-version: "8"
+          distribution: "adopt"
+      - name: "Verify Java version"
+        run: java -version || java --version
+      - uses: ./
+        with:
+          maven-version: 3.8.1
+      - run: mvn -v
