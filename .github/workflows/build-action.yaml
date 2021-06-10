@@ -17,6 +17,7 @@ jobs:
           node-version: 12
       - run: npm install
       - run: npm run build
+      - run: npm i -g @vercel/ncc
       - run: npm run build-dist
       - name: "Set up JDK"
         uses: actions/setup-java@v2
