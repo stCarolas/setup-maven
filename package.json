@@ -8,7 +8,8 @@
     "build": "tsc",
     "build-dist": "ncc build lib/setup-maven.js --minify",
     "format": "prettier --write **/*.ts",
-    "format-check": "prettier --check **/*.ts"
+    "format-check": "prettier --check **/*.ts",
+    "prepare": "husky install"
   },
   "keywords": [
     "actions",
