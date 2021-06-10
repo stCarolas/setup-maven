@@ -21,3 +21,4 @@ jobs:
       - uses: vk-org/setup-maven@master
         with:
           maven-version: 3.8.1
+      - run: mvn -v
