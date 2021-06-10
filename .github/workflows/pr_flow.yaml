@@ -1,0 +1,23 @@
+name: Java CI/CD workflow
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  java_setup:
+    name: "Setup Java"
+    runs-on: [ self-hosted, xlarge ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+      - name: "Verify Java version"
+        run: java -version
+      - uses: vk-org/setup-maven
+        with:
+          maven-version: 3.8.3
