@@ -1,7 +1,6 @@
-name: Java CI/CD workflow
+name: "Test result actions"
 
 on:
-  pull_request:
   push:
     branches:
       - master
