@@ -8,7 +8,7 @@ on:
 jobs:
   java_setup:
     name: "Setup Java"
-    runs-on: [ self-hosted, xlarge ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK
