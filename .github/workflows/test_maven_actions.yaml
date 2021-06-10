@@ -4,20 +4,26 @@ on:
   push:
     branches:
       - master
+
 jobs:
-  java_setup:
-    name: "Setup Java and Maven"
+  java_maven_setup:
+    name: "Setup Java and Maven GitHub actions"
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
       - name: "Set up JDK"
         uses: actions/setup-java@v2
         with:
           java-version: '8'
           distribution: 'adopt'
-      - name: "Verify Java version"
-        run: java -version
-      - uses: ${{ github.repository_owner }}/setup-maven@master
+
+      - name: "Set up Maven"
+        uses: vk-org/setup-maven@master
         with:
           maven-version: 3.8.1
-      - run: mvn -v
+
+      - name: "Verify Maven version"
+        run: mvn -v | head -1 | grep "3.8.1"
