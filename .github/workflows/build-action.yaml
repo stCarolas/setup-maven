@@ -30,4 +30,5 @@ jobs:
       - uses: ./
         with:
           maven-version: ${{ matrix.maven_version }}
-      - run: mvn -v
+      - name: "Validate Maven version"
+        run: mvn -v | head -1 | grep "${{ matrix.maven_version }}"
