@@ -1,4 +1,4 @@
-name: "Test result actions"
+name: "Test Maven GitHub action"
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
       - master
 jobs:
   java_setup:
-    name: "Setup Java"
+    name: "Setup Java and Maven"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK
+      - name: "Set up JDK"
         uses: actions/setup-java@v2
         with:
           java-version: '8'
