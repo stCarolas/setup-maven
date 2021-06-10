@@ -18,6 +18,6 @@ jobs:
           distribution: 'adopt'
       - name: "Verify Java version"
         run: java -version
-      - uses: vk-org/setup-maven
+      - uses: vk-org/setup-maven@master
         with:
           maven-version: 3.8.3
