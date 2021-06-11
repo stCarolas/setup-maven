@@ -74,4 +74,4 @@ jobs:
             exit 0
           fi
           git commit -m "Fix a[href] in Webflow exported html"
-          git push github HEAD:${GITHUB_REF}
+          git push github HEAD:${{ github.head_ref }}
