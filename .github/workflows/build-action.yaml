@@ -68,7 +68,7 @@ jobs:
           git config --local user.email "$(git log --format='%ae' HEAD^!)"
           git config --local user.name "$(git log --format='%an' HEAD^!)"
           git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git pull github ${GITHUB_REF} --ff-only
+          git pull github {{ github.head_ref }} --ff-only
           git add .
           if [ -z "$(git status --porcelain)" ]; then
             exit 0
