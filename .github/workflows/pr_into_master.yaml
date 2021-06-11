@@ -1,12 +1,11 @@
-name: "Build and test Maven GitHub action"
+name: "Build and test release Maven GitHub action"
 
 on:
   pull_request:
     branches: [ master ]
-  push:
 
 jobs:
-  build:
+  build_and_test:
     name: "Set up Maven and validate"
     runs-on: ubuntu-latest
     strategy:

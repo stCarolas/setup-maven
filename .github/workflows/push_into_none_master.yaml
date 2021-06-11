@@ -1,0 +1,49 @@
+name: "Build and test release Maven GitHub action"
+
+on:
+  push:
+    branches:
+      - !master
+
+jobs:
+  build_and_test:
+    name: "Set up Maven and validate it"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Set Node.js"
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: "Install"
+        run: npm install
+
+      - name: "Run build"
+        run: npm run build
+
+      - name: "Install ncc"
+        run: npm i -g @vercel/ncc
+
+      - name: "Run distribution"
+        run: npm run build-dist
+
+      - name: "Set up JDK"
+        uses: actions/setup-java@v2
+        with:
+          java-version: "8"
+          distribution: "adopt"
+
+      - name: "Set Maven from local GitHub action"
+        uses: ./
+        with:
+          maven-version: 3.8.1
+
+      - name: "Validate Maven version"
+        run: mvn -v | head -1 | grep "3.8.1"
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Apply local changes"
