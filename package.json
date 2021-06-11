@@ -24,7 +24,7 @@
     "@actions/http-client": "1.0.11",
     "@actions/io": "^1.0.0",
     "@actions/tool-cache": "^1.0.0",
-    "semver": "^6.1.1",
+    "semver": "^7.3.5",
     "typed-rest-client": "^1.5.0",
     "uglify-js": ">=2.6.0"
   },
