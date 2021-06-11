@@ -1,4 +1,4 @@
-name: "Test Maven GitHub action"
+name: "Test master branch Maven GitHub action"
 
 on:
   push:

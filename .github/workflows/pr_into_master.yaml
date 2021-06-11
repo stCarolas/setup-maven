@@ -1,4 +1,4 @@
-name: "Build and test Maven GitHub action"
+name: "Build and test release Maven GitHub action"
 
 on:
   pull_request:
@@ -46,32 +46,3 @@ jobs:
 
       - name: "Validate Maven version"
         run: mvn -v | head -1 | grep "${{ matrix.maven_version }}"
-
-  build_and_commit:
-    name: "Set up Maven and validate"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "Checkout code"
-        uses: actions/checkout@v2
-
-      - name: "Set Node.js"
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
-
-      - name: "Install"
-        run: npm install
-
-      - name: "Commit files"
-        run: |
-          git config --local user.email "$(git log --format='%ae' HEAD^!)"
-          git config --local user.name "$(git log --format='%an' HEAD^!)"
-          git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
-          git pull github ${{ github.head_ref }} --ff-only
-          git add .
-          if [ -z "$(git status --porcelain)" ]; then
-            exit 0
-          fi
-          git commit -m "Fix a[href] in Webflow exported html"
-          git push github HEAD:${{ github.head_ref }}
