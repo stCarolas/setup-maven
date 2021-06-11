@@ -3,7 +3,7 @@ name: "Build and test release Maven GitHub action"
 on:
   push:
     branches:
-      - "!master"
+      - '!master'
 
 jobs:
   build_and_test:
