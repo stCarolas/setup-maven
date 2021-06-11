@@ -1,4 +1,4 @@
-name: "Build and test release Maven GitHub action"
+name: "Build and test snapshot of Maven GitHub action"
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 12
 
-      - name: "Install"
+      - name: "Install packages"
         run: npm install
 
       - name: "Run build"
@@ -33,10 +33,10 @@ jobs:
       - name: "Set up JDK"
         uses: actions/setup-java@v2
         with:
-          java-version: "8"
+          java-version: "13"
           distribution: "adopt"
 
-      - name: "Set Maven from local GitHub action"
+      - name: "Set Maven from local path GitHub action"
         uses: ./
         with:
           maven-version: 3.8.1
@@ -46,4 +46,4 @@ jobs:
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Apply local changes"
+          commit_message: "Add a distribution."
