@@ -46,3 +46,9 @@ jobs:
 
       - name: "Validate Maven version"
         run: mvn -v | head -1 | grep "${{ matrix.maven_version }}"
+
+      - name: "Validate Maven version"
+          run: |
+            mvn -v; \
+            echo $PATH; \
+            echo $M2_HOME
