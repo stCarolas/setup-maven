@@ -4,7 +4,7 @@ Add this step into workflow
 
 ```
     - name: Set up Maven
-      uses: stCarolas/setup-maven@v4
+      uses: stCarolas/setup-maven@v4.2
       with:
-        maven-version: 3.5.4
+        maven-version: 3.8.2
 ```
