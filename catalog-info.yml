@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: actions-setup-maven
+  description: |
+    This action setups projects to be executed on GithubActions
+  annotations:
+    github.com/project-slug: Tradeshift/actions-setup-maven
+  tags:
+    - fork
+    - github-action
+    - nodejs
+spec:
+  type: library
+  owner: developer-productivity
+  lifecycle: production
