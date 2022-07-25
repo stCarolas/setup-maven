@@ -1,0 +1,7 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+* text=auto eol=lf
+
+# Excluded from stats, hidden in diffs
+dist/*.js   -diff -merge linguist-generated
