@@ -25,5 +25,5 @@ async function downloadMaven(version: string): Promise<string> {
   const extractedPath = await tc.extractTar(downloadPath);
 
   const toolRoot = path.join(extractedPath, toolDirectoryName);
-  return await tc.cacheDir(toolRoot, 'maven', version);
+  return tc.cacheDir(toolRoot, 'maven', version);
 }

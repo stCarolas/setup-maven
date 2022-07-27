@@ -4758,7 +4758,7 @@ function downloadMaven(version) {
         const downloadPath = yield tc.downloadTool(downloadUrl);
         const extractedPath = yield tc.extractTar(downloadPath);
         const toolRoot = path.join(extractedPath, toolDirectoryName);
-        return yield tc.cacheDir(toolRoot, 'maven', version);
+        return tc.cacheDir(toolRoot, 'maven', version);
     });
 }
 
