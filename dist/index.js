@@ -4749,11 +4749,12 @@ function getMaven(version) {
     });
 }
 exports.getMaven = getMaven;
+const DOWNLOAD_BASE_URL = 'https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven';
 function downloadMaven(version) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolDirectoryName = `apache-maven-${version}`;
-        const downloadUrl = `https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${version}/${toolDirectoryName}-bin.tar.gz`;
-        core.debug(`Downloading ${downloadUrl}`);
+        const downloadUrl = `${DOWNLOAD_BASE_URL}/${version}/${toolDirectoryName}-bin.tar.gz`;
+        core.info(`Downloading Maven ${version} from ${downloadUrl} ...`);
         const downloadPath = yield tc.downloadTool(downloadUrl);
         const extractedPath = yield tc.extractTar(downloadPath);
         const toolRoot = path.join(extractedPath, toolDirectoryName);
