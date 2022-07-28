@@ -18,7 +18,8 @@ jobs:
 Clone this repository and build the project with command
 
 ```batch
-docker run --rm -it -v "%PWD%:/usr/src/app" -w /usr/src/app node:12-alpine /bin/sh -c "npm i --no-bin-links && npm test && npm run build"
+docker run --rm -it -v "%PWD%:/usr/src/app" -w /usr/src/app node:16-alpine /bin/sh -c ^
+  "npm i --no-bin-links --no-save && npm run lint && npm test && npm run build"
 ```
 
 **Note** that `%PWD%` is the project working directory in `Unix` format, such as: `/c/Users/source/repos/setup-maven`
