@@ -8,5 +8,5 @@
     "noImplicitAny": true,
     "esModuleInterop": true
   },
-  "exclude": ["__tests__", "lib", "node_modules"]
+  "exclude": ["node_modules", "lib", "**/*.test.ts"]
 }

@@ -7,9 +7,10 @@
   "scripts": {
     "build": "npm run ncc -- build -o dist src/setup-maven.ts",
     "format": "npm run prettier -- \"{,!(dist)/**/}?*.*\" --write",
-    "format-check": "npm run prettier -- \"{,!(dist)/**/}?*.*\" --check",
+    "lint": "npm run prettier -- \"{,!(dist)/**/}?*.*\" --check",
     "ncc": "node node_modules/@vercel/ncc/dist/ncc/cli.js",
-    "prettier": "node node_modules/prettier/bin-prettier.js --ignore-path .gitignore"
+    "prettier": "node node_modules/prettier/bin-prettier.js --ignore-path .gitignore",
+    "test": "npm run lint && node node_modules/jest/bin/jest.js"
   },
   "keywords": [
     "actions",
@@ -26,10 +27,14 @@
     "semver": "^6.1.1"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.15",
     "@types/node": "^12.0.4",
     "@types/semver": "^6.0.0",
     "@vercel/ncc": "^0.24.1",
+    "jest": "^26.3.0",
+    "jest-circus": "^26.3.0",
     "prettier": "^1.17.1",
+    "ts-jest": "^26.2.0",
     "typescript": "^3.5.1"
   },
   "prettier": {
@@ -37,5 +42,17 @@
     "trailingComma": "none",
     "bracketSpacing": true,
     "arrowParens": "avoid"
+  },
+  "jest": {
+    "clearMocks": true,
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "testRunner": "jest-circus/runner",
+    "transform": {
+      "\\.ts$": "ts-jest"
+    },
+    "verbose": true
   }
 }
