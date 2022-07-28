@@ -10,7 +10,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@v5
       with:
-        maven-version: 3.8.2
+        maven-version: 3.8
 ```
 
 ### Development using [Docker](https://docs.docker.com/)
@@ -41,5 +41,5 @@ Run `SonarScanner` from [the Docker image](https://hub.docker.com/r/sonarsource/
 ```batch
 docker run --rm -it --link docker-sonarqube -v "%PWD%:/usr/src/app" -w /usr/src/app ^
   -e "SONAR_HOST_URL=http://docker-sonarqube:9000" -e "SONAR_LOGIN=<projectToken>" sonarsource/sonar-scanner-cli ^
-  -Dsonar.projectKey=setup-maven -Dsonar.language=js -Dsonar.sources=. "-Dsonar.exclusions=dist/**"
+  -Dsonar.projectKey=setup-maven -Dsonar.sources=. "-Dsonar.exclusions=dist/**,lib/**"
 ```

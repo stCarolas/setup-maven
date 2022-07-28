@@ -5,7 +5,10 @@ inputs:
   maven-version:
     description: 'Version Spec of the version to use. Examples: 3.x, 3.1.1, >=3.8.0'
     required: false
-    default: '3.8.2'
+    default: '3'
+outputs:
+  version:
+    description: 'Actual version of Apache Maven that has been installed'
 runs:
   using: 'node16'
   main: 'dist/index.js'

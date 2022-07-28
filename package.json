@@ -38,9 +38,10 @@
     "typescript": "^4.2.3"
   },
   "prettier": {
+    "printWidth": 100,
     "semi": true,
+    "singleQuote": true,
     "trailingComma": "none",
-    "bracketSpacing": true,
     "arrowParens": "avoid"
   },
   "jest": {
