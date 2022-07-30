@@ -14,7 +14,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const os = __importStar(__nccwpck_require__(37));
+const os = __importStar(__nccwpck_require__(87));
 const utils_1 = __nccwpck_require__(278);
 /**
  * Commands
@@ -112,8 +112,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const command_1 = __nccwpck_require__(351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(278);
-const os = __importStar(__nccwpck_require__(37));
-const path = __importStar(__nccwpck_require__(17));
+const os = __importStar(__nccwpck_require__(87));
+const path = __importStar(__nccwpck_require__(622));
 /**
  * The code to exit an action
  */
@@ -348,8 +348,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(147));
-const os = __importStar(__nccwpck_require__(37));
+const fs = __importStar(__nccwpck_require__(747));
+const os = __importStar(__nccwpck_require__(87));
 const utils_1 = __nccwpck_require__(278);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
@@ -399,6 +399,25 @@ exports.toCommandValue = toCommandValue;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -408,14 +427,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getExecOutput = exports.exec = void 0;
+const string_decoder_1 = __nccwpck_require__(304);
 const tr = __importStar(__nccwpck_require__(159));
 /**
  * Exec a command.
@@ -441,6 +455,51 @@ function exec(commandLine, args, options) {
     });
 }
 exports.exec = exec;
+/**
+ * Exec a command and get the output.
+ * Output will be streamed to the live console.
+ * Returns promise with the exit code and collected stdout and stderr
+ *
+ * @param     commandLine           command to execute (can include additional args). Must be correctly escaped.
+ * @param     args                  optional arguments for tool. Escaping is handled by the lib.
+ * @param     options               optional exec options.  See ExecOptions
+ * @returns   Promise<ExecOutput>   exit code, stdout, and stderr
+ */
+function getExecOutput(commandLine, args, options) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        let stdout = '';
+        let stderr = '';
+        //Using string decoder covers the case where a mult-byte character is split
+        const stdoutDecoder = new string_decoder_1.StringDecoder('utf8');
+        const stderrDecoder = new string_decoder_1.StringDecoder('utf8');
+        const originalStdoutListener = (_a = options === null || options === void 0 ? void 0 : options.listeners) === null || _a === void 0 ? void 0 : _a.stdout;
+        const originalStdErrListener = (_b = options === null || options === void 0 ? void 0 : options.listeners) === null || _b === void 0 ? void 0 : _b.stderr;
+        const stdErrListener = (data) => {
+            stderr += stderrDecoder.write(data);
+            if (originalStdErrListener) {
+                originalStdErrListener(data);
+            }
+        };
+        const stdOutListener = (data) => {
+            stdout += stdoutDecoder.write(data);
+            if (originalStdoutListener) {
+                originalStdoutListener(data);
+            }
+        };
+        const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
+        const exitCode = yield exec(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        //flush any remaining characters
+        stdout += stdoutDecoder.end();
+        stderr += stderrDecoder.end();
+        return {
+            exitCode,
+            stdout,
+            stderr
+        };
+    });
+}
+exports.getExecOutput = getExecOutput;
 //# sourceMappingURL=exec.js.map
 
 /***/ }),
@@ -450,6 +509,25 @@ exports.exec = exec;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -459,20 +537,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const os = __importStar(__nccwpck_require__(37));
-const events = __importStar(__nccwpck_require__(361));
-const child = __importStar(__nccwpck_require__(81));
-const path = __importStar(__nccwpck_require__(17));
+exports.argStringToArray = exports.ToolRunner = void 0;
+const os = __importStar(__nccwpck_require__(87));
+const events = __importStar(__nccwpck_require__(614));
+const child = __importStar(__nccwpck_require__(129));
+const path = __importStar(__nccwpck_require__(622));
 const io = __importStar(__nccwpck_require__(436));
 const ioUtil = __importStar(__nccwpck_require__(962));
+const timers_1 = __nccwpck_require__(213);
 /* eslint-disable @typescript-eslint/unbound-method */
 const IS_WINDOWS = process.platform === 'win32';
 /*
@@ -542,11 +615,12 @@ class ToolRunner extends events.EventEmitter {
                 s = s.substring(n + os.EOL.length);
                 n = s.indexOf(os.EOL);
             }
-            strBuffer = s;
+            return s;
         }
         catch (err) {
             // streaming lines to console is best effort.  Don't fail a build.
             this._debug(`error processing line. Failed with error ${err}`);
+            return '';
         }
     }
     _getSpawnFileName() {
@@ -828,7 +902,7 @@ class ToolRunner extends events.EventEmitter {
             // if the tool is only a file name, then resolve it from the PATH
             // otherwise verify it exists (add extension on Windows if necessary)
             this.toolPath = yield io.which(this.toolPath, true);
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 this._debug(`exec tool: ${this.toolPath}`);
                 this._debug('arguments:');
                 for (const arg of this.args) {
@@ -842,9 +916,12 @@ class ToolRunner extends events.EventEmitter {
                 state.on('debug', (message) => {
                     this._debug(message);
                 });
+                if (this.options.cwd && !(yield ioUtil.exists(this.options.cwd))) {
+                    return reject(new Error(`The cwd: ${this.options.cwd} does not exist!`));
+                }
                 const fileName = this._getSpawnFileName();
                 const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
-                const stdbuffer = '';
+                let stdbuffer = '';
                 if (cp.stdout) {
                     cp.stdout.on('data', (data) => {
                         if (this.options.listeners && this.options.listeners.stdout) {
@@ -853,14 +930,14 @@ class ToolRunner extends events.EventEmitter {
                         if (!optionsNonNull.silent && optionsNonNull.outStream) {
                             optionsNonNull.outStream.write(data);
                         }
-                        this._processLineBuffer(data, stdbuffer, (line) => {
+                        stdbuffer = this._processLineBuffer(data, stdbuffer, (line) => {
                             if (this.options.listeners && this.options.listeners.stdline) {
                                 this.options.listeners.stdline(line);
                             }
                         });
                     });
                 }
-                const errbuffer = '';
+                let errbuffer = '';
                 if (cp.stderr) {
                     cp.stderr.on('data', (data) => {
                         state.processStderr = true;
@@ -875,7 +952,7 @@ class ToolRunner extends events.EventEmitter {
                                 : optionsNonNull.outStream;
                             s.write(data);
                         }
-                        this._processLineBuffer(data, errbuffer, (line) => {
+                        errbuffer = this._processLineBuffer(data, errbuffer, (line) => {
                             if (this.options.listeners && this.options.listeners.errline) {
                                 this.options.listeners.errline(line);
                             }
@@ -922,7 +999,7 @@ class ToolRunner extends events.EventEmitter {
                     }
                     cp.stdin.end(this.options.input);
                 }
-            });
+            }));
         });
     }
 }
@@ -1008,7 +1085,7 @@ class ExecState extends events.EventEmitter {
             this._setResult();
         }
         else if (this.processExited) {
-            this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
+            this.timeout = timers_1.setTimeout(ExecState.HandleTimeout, this.delay, this);
         }
     }
     _debug(message) {
@@ -1058,8 +1135,8 @@ class ExecState extends events.EventEmitter {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __nccwpck_require__(685);
-const https = __nccwpck_require__(687);
+const http = __nccwpck_require__(605);
+const https = __nccwpck_require__(211);
 const pm = __nccwpck_require__(443);
 let tunnel;
 var HttpCodes;
@@ -1678,9 +1755,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const assert_1 = __nccwpck_require__(491);
-const fs = __nccwpck_require__(147);
-const path = __nccwpck_require__(17);
+const assert_1 = __nccwpck_require__(357);
+const fs = __nccwpck_require__(747);
+const path = __nccwpck_require__(622);
 _a = fs.promises, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
 exports.IS_WINDOWS = process.platform === 'win32';
 function exists(fsPath) {
@@ -1879,9 +1956,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const childProcess = __nccwpck_require__(81);
-const path = __nccwpck_require__(17);
-const util_1 = __nccwpck_require__(837);
+const childProcess = __nccwpck_require__(129);
+const path = __nccwpck_require__(622);
+const util_1 = __nccwpck_require__(669);
 const ioUtil = __nccwpck_require__(962);
 const exec = util_1.promisify(childProcess.exec);
 /**
@@ -2187,9 +2264,9 @@ const semver = __importStar(__nccwpck_require__(911));
 const core_1 = __nccwpck_require__(186);
 // needs to be require for core node modules to be mocked
 /* eslint @typescript-eslint/no-require-imports: 0 */
-const os = __nccwpck_require__(37);
-const cp = __nccwpck_require__(81);
-const fs = __nccwpck_require__(147);
+const os = __nccwpck_require__(87);
+const cp = __nccwpck_require__(129);
+const fs = __nccwpck_require__(747);
 function _findMatch(versionSpec, stable, candidates, archFilter) {
     return __awaiter(this, void 0, void 0, function* () {
         const platFilter = os.platform();
@@ -2378,17 +2455,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const io = __importStar(__nccwpck_require__(436));
-const fs = __importStar(__nccwpck_require__(147));
+const fs = __importStar(__nccwpck_require__(747));
 const mm = __importStar(__nccwpck_require__(473));
-const os = __importStar(__nccwpck_require__(37));
-const path = __importStar(__nccwpck_require__(17));
+const os = __importStar(__nccwpck_require__(87));
+const path = __importStar(__nccwpck_require__(622));
 const httpm = __importStar(__nccwpck_require__(925));
 const semver = __importStar(__nccwpck_require__(911));
-const stream = __importStar(__nccwpck_require__(781));
-const util = __importStar(__nccwpck_require__(837));
+const stream = __importStar(__nccwpck_require__(413));
+const util = __importStar(__nccwpck_require__(669));
 const v4_1 = __importDefault(__nccwpck_require__(824));
 const exec_1 = __nccwpck_require__(514);
-const assert_1 = __nccwpck_require__(491);
+const assert_1 = __nccwpck_require__(357);
 const retry_helper_1 = __nccwpck_require__(279);
 class HTTPError extends Error {
     constructor(httpStatusCode) {
@@ -4581,13 +4658,13 @@ module.exports = __nccwpck_require__(219);
 "use strict";
 
 
-var net = __nccwpck_require__(808);
-var tls = __nccwpck_require__(404);
-var http = __nccwpck_require__(685);
-var https = __nccwpck_require__(687);
-var events = __nccwpck_require__(361);
-var assert = __nccwpck_require__(491);
-var util = __nccwpck_require__(837);
+var net = __nccwpck_require__(631);
+var tls = __nccwpck_require__(16);
+var http = __nccwpck_require__(605);
+var https = __nccwpck_require__(211);
+var events = __nccwpck_require__(614);
+var assert = __nccwpck_require__(357);
+var util = __nccwpck_require__(669);
 
 
 exports.httpOverHttp = httpOverHttp;
@@ -4886,7 +4963,7 @@ module.exports = bytesToUuid;
 // Unique ID creation requires a high quality random # generator.  In node.js
 // this is pretty straight-forward - we use the crypto API.
 
-var crypto = __nccwpck_require__(113);
+var crypto = __nccwpck_require__(417);
 
 module.exports = function nodeRNG() {
   return crypto.randomBytes(16);
@@ -4951,7 +5028,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -4965,45 +5042,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.findVersionForDownload = exports.downloadMaven = exports.getAvailableVersions = exports.setupMaven = void 0;
-const path = __importStar(__nccwpck_require__(17));
+exports.setupMaven = exports.findVersionForDownload = exports.downloadMaven = exports.getAvailableVersions = void 0;
+const path = __importStar(__nccwpck_require__(622));
 const core = __importStar(__nccwpck_require__(186));
+const httpm = __importStar(__nccwpck_require__(925));
 const tc = __importStar(__nccwpck_require__(784));
-const http_client_1 = __nccwpck_require__(925);
 const semver = __importStar(__nccwpck_require__(911));
 const utils_1 = __nccwpck_require__(314);
-function setupMaven(versionSpec, installedVersion) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let toolPath = tc.find('maven', versionSpec);
-        let resolvedVersion = utils_1.getVersionFromToolcachePath(toolPath);
-        if (installedVersion) {
-            if (!toolPath || semver.gte(installedVersion, resolvedVersion)) {
-                core.info(`Use system Maven version ${installedVersion} instead of the cached one: ${resolvedVersion}`);
-                return installedVersion;
-            }
-        }
-        else if (!toolPath) {
-            resolvedVersion = yield findVersionForDownload(versionSpec);
-            toolPath = yield downloadMaven(resolvedVersion);
-        }
-        core.addPath(path.join(toolPath, 'bin'));
-        return resolvedVersion;
-    });
-}
-exports.setupMaven = setupMaven;
 const DOWNLOAD_BASE_URL = 'https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven';
 function getAvailableVersions() {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const resourceUrl = `${DOWNLOAD_BASE_URL}/maven-metadata.xml`;
-        const http = new http_client_1.HttpClient('setup-maven', undefined, { allowRetries: true });
+        const http = new httpm.HttpClient('setup-maven', undefined, { allowRetries: true });
         core.info(`Downloading Maven versions manifest from ${resourceUrl} ...`);
         const response = yield http.get(resourceUrl);
         const body = yield response.readBody();
-        if (response.message.statusCode !== http_client_1.HttpCodes.OK || !body) {
+        if (response.message.statusCode !== httpm.HttpCodes.OK || !body) {
             throw new Error(`Unable to get available versions from ${resourceUrl}`);
         }
-        const availableVersions = body.match(/(?<=<version>)[^<>]+(?=<\/version>)/g) || [];
-        core.debug(`Available Maven versions: [${availableVersions}]`);
+        const availableVersions = (_a = body.match(/(?<=<version>)[^<>]+(?=<\/version>)/g)) !== null && _a !== void 0 ? _a : [];
+        core.debug(`Available Maven versions: [${availableVersions.toString()}]`);
         return availableVersions;
     });
 }
@@ -5035,6 +5094,25 @@ function findVersionForDownload(versionSpec) {
     });
 }
 exports.findVersionForDownload = findVersionForDownload;
+function setupMaven(versionSpec, installedVersion) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let toolPath = tc.find('maven', versionSpec);
+        let resolvedVersion = utils_1.getVersionFromToolcachePath(toolPath);
+        if (installedVersion) {
+            if (!toolPath || semver.gte(installedVersion, resolvedVersion)) {
+                core.info(`Use system Maven version ${installedVersion} instead of the cached one: ${resolvedVersion}`);
+                return installedVersion;
+            }
+        }
+        else if (!toolPath) {
+            resolvedVersion = yield findVersionForDownload(versionSpec);
+            toolPath = yield downloadMaven(resolvedVersion);
+        }
+        core.addPath(path.join(toolPath, 'bin'));
+        return resolvedVersion;
+    });
+}
+exports.setupMaven = setupMaven;
 
 
 /***/ }),
@@ -5059,7 +5137,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -5078,14 +5156,17 @@ const core = __importStar(__nccwpck_require__(186));
 const semver = __importStar(__nccwpck_require__(911));
 const utils_1 = __nccwpck_require__(314);
 const installer_1 = __nccwpck_require__(574);
+function resolveVersionInput() {
+    const versionSpec = core.getInput('maven-version') || '3';
+    if (!semver.validRange(versionSpec)) {
+        throw new Error(`Invalid SemVer notation '${versionSpec}' for a Maven version`);
+    }
+    return versionSpec;
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const versionSpec = core.getInput('maven-version') || '3';
-            if (!semver.validRange(versionSpec)) {
-                core.setFailed(`Invalid SemVer notation '${versionSpec}' for a Maven version`);
-                return;
-            }
+            const versionSpec = resolveVersionInput();
             let installedVersion = yield utils_1.getActiveMavenVersion();
             if (installedVersion && !semver.satisfies(installedVersion, versionSpec)) {
                 installedVersion = undefined;
@@ -5093,8 +5174,8 @@ function run() {
             installedVersion = yield installer_1.setupMaven(versionSpec, installedVersion);
             core.setOutput('version', installedVersion);
         }
-        catch (error) {
-            core.setFailed(error.toString());
+        catch (err) {
+            core.setFailed(err.message);
         }
     });
 }
@@ -5123,7 +5204,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -5137,8 +5218,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getExecOutput = exports.getActiveMavenVersion = exports.getVersionFromToolcachePath = void 0;
-const path = __importStar(__nccwpck_require__(17));
+exports.getActiveMavenVersion = exports.getVersionFromToolcachePath = void 0;
+const path = __importStar(__nccwpck_require__(622));
 const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
 function getVersionFromToolcachePath(toolPath) {
@@ -5151,42 +5232,24 @@ exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function getActiveMavenVersion() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { output } = yield getExecOutput('mvn', ['-v']);
-            const found = output.match(/^[^\d]*(\S+)/);
+            const { stdout } = yield exec.getExecOutput('mvn', ['-v'], { silent: true });
+            const found = /^[^\d]*(\S+)/.exec(stdout);
             const installedVersion = !found ? '' : found[1];
             core.debug(`Retrieved activated Maven version: ${installedVersion}`);
             return installedVersion;
         }
-        catch (error) {
-            core.info(`Failed to get activated Maven version. ${error}`);
+        catch (err) {
+            core.info(`Failed to get activated Maven version. ${err.message}`);
         }
         return undefined;
     });
 }
 exports.getActiveMavenVersion = getActiveMavenVersion;
-/**
- * Exec a command and get the standard output.
- *
- * @throws {Error} If the exit-code is non-zero.
- */
-function getExecOutput(command, args) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let output = '';
-        const exitCode = yield exec.exec(command, args, {
-            silent: true,
-            listeners: {
-                stdout: (data) => (output += data.toString())
-            }
-        });
-        return { exitCode, output };
-    });
-}
-exports.getExecOutput = getExecOutput;
 
 
 /***/ }),
 
-/***/ 491:
+/***/ 357:
 /***/ ((module) => {
 
 "use strict";
@@ -5194,7 +5257,7 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 81:
+/***/ 129:
 /***/ ((module) => {
 
 "use strict";
@@ -5202,7 +5265,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 113:
+/***/ 417:
 /***/ ((module) => {
 
 "use strict";
@@ -5210,7 +5273,7 @@ module.exports = require("crypto");
 
 /***/ }),
 
-/***/ 361:
+/***/ 614:
 /***/ ((module) => {
 
 "use strict";
@@ -5218,7 +5281,7 @@ module.exports = require("events");
 
 /***/ }),
 
-/***/ 147:
+/***/ 747:
 /***/ ((module) => {
 
 "use strict";
@@ -5226,7 +5289,7 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 685:
+/***/ 605:
 /***/ ((module) => {
 
 "use strict";
@@ -5234,7 +5297,7 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ 687:
+/***/ 211:
 /***/ ((module) => {
 
 "use strict";
@@ -5242,7 +5305,7 @@ module.exports = require("https");
 
 /***/ }),
 
-/***/ 808:
+/***/ 631:
 /***/ ((module) => {
 
 "use strict";
@@ -5250,7 +5313,7 @@ module.exports = require("net");
 
 /***/ }),
 
-/***/ 37:
+/***/ 87:
 /***/ ((module) => {
 
 "use strict";
@@ -5258,7 +5321,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 17:
+/***/ 622:
 /***/ ((module) => {
 
 "use strict";
@@ -5266,7 +5329,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 781:
+/***/ 413:
 /***/ ((module) => {
 
 "use strict";
@@ -5274,7 +5337,23 @@ module.exports = require("stream");
 
 /***/ }),
 
-/***/ 404:
+/***/ 304:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("string_decoder");
+
+/***/ }),
+
+/***/ 213:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("timers");
+
+/***/ }),
+
+/***/ 16:
 /***/ ((module) => {
 
 "use strict";
@@ -5282,7 +5361,7 @@ module.exports = require("tls");
 
 /***/ }),
 
-/***/ 837:
+/***/ 669:
 /***/ ((module) => {
 
 "use strict";
@@ -5337,6 +5416,7 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const main_1 = __nccwpck_require__(399);
 // noinspection JSIgnoredPromiseFromCall
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 main_1.run();
 
 })();

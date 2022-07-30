@@ -4,4 +4,4 @@
 * text=auto eol=lf
 
 # Excluded from stats, hidden in diffs
-dist/*.js   -diff -merge linguist-generated
+dist/**   -diff -merge linguist-generated

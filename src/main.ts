@@ -4,14 +4,19 @@ import * as semver from 'semver';
 import { getActiveMavenVersion } from './utils';
 import { setupMaven } from './installer';
 
-export async function run() {
-  try {
-    const versionSpec = core.getInput('maven-version') || '3';
+function resolveVersionInput(): string {
+  const versionSpec = core.getInput('maven-version') || '3';
 
-    if (!semver.validRange(versionSpec)) {
-      core.setFailed(`Invalid SemVer notation '${versionSpec}' for a Maven version`);
-      return;
-    }
+  if (!semver.validRange(versionSpec)) {
+    throw new Error(`Invalid SemVer notation '${versionSpec}' for a Maven version`);
+  }
+
+  return versionSpec;
+}
+
+export async function run(): Promise<void> {
+  try {
+    const versionSpec = resolveVersionInput();
 
     let installedVersion = await getActiveMavenVersion();
     if (installedVersion && !semver.satisfies(installedVersion, versionSpec)) {
@@ -20,7 +25,7 @@ export async function run() {
 
     installedVersion = await setupMaven(versionSpec, installedVersion);
     core.setOutput('version', installedVersion);
-  } catch (error) {
-    core.setFailed(error.toString());
+  } catch (err) {
+    core.setFailed((err as Error).message);
   }
 }
