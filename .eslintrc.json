@@ -3,13 +3,67 @@
     "es6": true,
     "node": true
   },
-  "plugins": ["@typescript-eslint"],
-  "extends": [
-    "eslint:recommended", // all
-    "plugin:@typescript-eslint/all",
-    "prettier"
-  ],
+  "extends": ["eslint:all"],
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "sourceType": "module"
+  },
+  "rules": {
+    "capitalized-comments": [
+      "warn",
+      "always",
+      {
+        "ignorePattern": "noinspection|pragma",
+        "ignoreInlineComments": true
+      }
+    ],
+    "one-var": ["warn", "never"],
+    "sort-imports": [
+      "warn",
+      {
+        "allowSeparatedGroups": true,
+        "ignoreDeclarationSort": true
+      }
+    ],
+    "no-undefined": "off",
+    "require-unicode-regexp": "off",
+    "no-ternary": "off",
+    "no-negated-condition": "off",
+    "prefer-named-capture-group": "off"
+  },
   "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "plugins": ["@typescript-eslint"],
+      "extends": ["plugin:@typescript-eslint/all"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "./tsconfig.eslint.json"
+      },
+      "rules": {
+        "func-style": [
+          "error",
+          "declaration",
+          {
+            "allowArrowFunctions": true
+          }
+        ],
+        "@typescript-eslint/no-implicit-any-catch": "off",
+        "@typescript-eslint/no-magic-numbers": [
+          "warn",
+          {
+            "ignore": [0, 1],
+            "ignoreArrayIndexes": true
+          }
+        ],
+        "@typescript-eslint/strict-boolean-expressions": [
+          "error",
+          {
+            "allowNullableString": true
+          }
+        ]
+      }
+    },
     {
       "files": ["**/*.test.ts"],
       "env": {
@@ -18,29 +72,14 @@
       "plugins": ["jest"],
       "extends": ["plugin:jest/all"],
       "rules": {
+        "max-lines-per-function": ["warn", 100],
+        "jest/no-hooks": "off",
         "jest/prefer-expect-assertions": "off"
       }
+    },
+    {
+      "files": ["**/*"],
+      "extends": ["prettier"]
     }
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 9,
-    "sourceType": "module",
-    "project": "./tsconfig.eslint.json"
-  },
-  "rules": {
-    "@typescript-eslint/no-implicit-any-catch": "off",
-    "@typescript-eslint/no-magic-numbers": [
-      "error",
-      {
-        "ignoreArrayIndexes": true
-      }
-    ],
-    "@typescript-eslint/strict-boolean-expressions": [
-      "error",
-      {
-        "allowNullableString": true
-      }
-    ]
-  }
+  ]
 }

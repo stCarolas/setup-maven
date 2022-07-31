@@ -1,0 +1,7 @@
+#!/bin/sh
+echo 'Apache Maven 3.5.2 (138edd61fd100ec658bfa2d307c43b76940a5d7d; 2017-10-18T07:58:13Z)'
+echo 'Maven home: /usr/share/maven'
+echo 'Java version: 1.8.0_121, vendor: Oracle Corporation'
+echo 'Java home: /usr/lib/jvm/java-1.8-openjdk/jre'
+echo 'Default locale: en_US, platform encoding: UTF-8'
+echo 'OS name: "linux", version: "4.4.0-210-generic", arch: "amd64", family: "unix"'

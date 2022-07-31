@@ -4,8 +4,10 @@ import * as semver from 'semver';
 import { getActiveMavenVersion } from './utils';
 import { setupMaven } from './installer';
 
+const DEFAULT_VERSION = '3';
+
 function resolveVersionInput(): string {
-  const versionSpec = core.getInput('maven-version') || '3';
+  const versionSpec = core.getInput('maven-version') || DEFAULT_VERSION;
 
   if (!semver.validRange(versionSpec)) {
     throw new Error(`Invalid SemVer notation '${versionSpec}' for a Maven version`);

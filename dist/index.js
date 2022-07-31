@@ -5045,20 +5045,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.setupMaven = exports.findVersionForDownload = exports.downloadMaven = exports.getAvailableVersions = void 0;
 const path = __importStar(__nccwpck_require__(622));
 const core = __importStar(__nccwpck_require__(186));
-const httpm = __importStar(__nccwpck_require__(925));
 const tc = __importStar(__nccwpck_require__(784));
 const semver = __importStar(__nccwpck_require__(911));
+const http_client_1 = __nccwpck_require__(925);
 const utils_1 = __nccwpck_require__(314);
 const DOWNLOAD_BASE_URL = 'https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven';
 function getAvailableVersions() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const resourceUrl = `${DOWNLOAD_BASE_URL}/maven-metadata.xml`;
-        const http = new httpm.HttpClient('setup-maven', undefined, { allowRetries: true });
+        const http = new http_client_1.HttpClient('setup-maven', undefined, { allowRetries: true });
         core.info(`Downloading Maven versions manifest from ${resourceUrl} ...`);
         const response = yield http.get(resourceUrl);
         const body = yield response.readBody();
-        if (response.message.statusCode !== httpm.HttpCodes.OK || !body) {
+        if (response.message.statusCode !== http_client_1.HttpCodes.OK || !body) {
             throw new Error(`Unable to get available versions from ${resourceUrl}`);
         }
         const availableVersions = (_a = body.match(/(?<=<version>)[^<>]+(?=<\/version>)/g)) !== null && _a !== void 0 ? _a : [];
@@ -5070,21 +5070,21 @@ exports.getAvailableVersions = getAvailableVersions;
 /**
  * Download and extract a specified Maven version to the tool-cache.
  */
-function downloadMaven(fullVersion) {
+function downloadMaven(version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const toolDirectoryName = `apache-maven-${fullVersion}`;
-        const downloadUrl = `${DOWNLOAD_BASE_URL}/${fullVersion}/${toolDirectoryName}-bin.tar.gz`;
-        core.info(`Downloading Maven ${fullVersion} from ${downloadUrl} ...`);
+        const toolDirectoryName = `apache-maven-${version}`;
+        const downloadUrl = `${DOWNLOAD_BASE_URL}/${version}/${toolDirectoryName}-bin.tar.gz`;
+        core.info(`Downloading Maven ${version} from ${downloadUrl} ...`);
         const downloadPath = yield tc.downloadTool(downloadUrl);
         const extractedPath = yield tc.extractTar(downloadPath);
         const toolRoot = path.join(extractedPath, toolDirectoryName);
-        return tc.cacheDir(toolRoot, 'maven', fullVersion);
+        return tc.cacheDir(toolRoot, 'maven', version);
     });
 }
 exports.downloadMaven = downloadMaven;
 function findVersionForDownload(versionSpec) {
     return __awaiter(this, void 0, void 0, function* () {
-        const availableVersions = yield getAvailableVersions();
+        const availableVersions = (yield getAvailableVersions()).map(ver => ver.trim());
         const resolvedVersion = semver.maxSatisfying(availableVersions, versionSpec);
         if (!resolvedVersion) {
             throw new Error(`Could not find satisfied version for SemVer ${versionSpec}`);
@@ -5156,8 +5156,9 @@ const core = __importStar(__nccwpck_require__(186));
 const semver = __importStar(__nccwpck_require__(911));
 const utils_1 = __nccwpck_require__(314);
 const installer_1 = __nccwpck_require__(574);
+const DEFAULT_VERSION = '3';
 function resolveVersionInput() {
-    const versionSpec = core.getInput('maven-version') || '3';
+    const versionSpec = core.getInput('maven-version') || DEFAULT_VERSION;
     if (!semver.validRange(versionSpec)) {
         throw new Error(`Invalid SemVer notation '${versionSpec}' for a Maven version`);
     }
@@ -5233,13 +5234,13 @@ function getActiveMavenVersion() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { stdout } = yield exec.getExecOutput('mvn', ['-v'], { silent: true });
-            const found = /^[^\d]*(\S+)/.exec(stdout);
+            const found = /^[^\d]*(\d\S*)/.exec(stdout);
             const installedVersion = !found ? '' : found[1];
             core.debug(`Retrieved activated Maven version: ${installedVersion}`);
             return installedVersion;
         }
         catch (err) {
-            core.info(`Failed to get activated Maven version. ${err.message}`);
+            core.info(`Failed to get activated Maven version. ${String(err)}`);
         }
         return undefined;
     });
@@ -5414,9 +5415,9 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+/* eslint @typescript-eslint/no-floating-promises: 0 */
 const main_1 = __nccwpck_require__(399);
 // noinspection JSIgnoredPromiseFromCall
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
 main_1.run();
 
 })();

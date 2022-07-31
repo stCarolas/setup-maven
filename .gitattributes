@@ -5,3 +5,7 @@
 
 # Excluded from stats, hidden in diffs
 dist/**   -diff -merge linguist-generated
+
+# These are explicitly windows files and should use crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf

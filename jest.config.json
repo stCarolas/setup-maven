@@ -1,5 +1,6 @@
 {
   "clearMocks": true,
+  "resetMocks": true,
   "moduleFileExtensions": ["ts", "js"],
   "testEnvironment": "node",
   "testMatch": ["**/*.test.ts"],
