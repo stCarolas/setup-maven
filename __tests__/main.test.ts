@@ -1,15 +1,20 @@
+import * as os from 'os';
+import * as path from 'path';
+import { existsSync, promises as fs } from 'fs';
+
 import * as core from '@actions/core';
 
-import { getActiveMavenVersion } from '../src/utils';
-import { setupMaven } from '../src/installer';
+import * as utils from '../src/utils';
+import * as installer from '../src/installer';
 import { run } from '../src/main';
 
 // Mocking modules
 jest.mock('@actions/core');
-jest.mock('../src/utils');
-jest.mock('../src/installer');
 
+const MVN_PATH = path.join(__dirname, 'data');
 const DEFAULT_VERSION = '3';
+const REAL_VERSION = '3.5.2';
+const CACHE_PATH = path.join(__dirname, 'runner');
 
 describe('failed to run with invalid inputs', () => {
   it.each([
@@ -25,33 +30,83 @@ describe('failed to run with invalid inputs', () => {
 });
 
 describe('run with valid inputs', () => {
-  it('setups default version when no Maven is installed', async () => {
+  it.each([
+    // Default version + no Maven is installed
+    [{ setup: 'foo', spec: '' }, [DEFAULT_VERSION, undefined]],
+    [{ active: '', setup: '3.0', spec: ' * ' }, [' * ', '']],
+    // Installed version !~ version input
+    [{ active: '3.5.2', setup: DEFAULT_VERSION, spec: ' 3.3' }, [' 3.3', undefined]],
+    // Installed version =~ version input
+    [{ active: '3.3.9', setup: '', spec: '3.x ' }, ['3.x ', '3.3.9']]
+  ])(
+    '%o -> %j',
+    async (
+      version: Readonly<{ spec: string; active?: string; setup: string }>,
+      expected: readonly (string | undefined)[]
+    ) => {
+      (core.getInput as jest.Mock).mockReturnValue(version.spec);
+      jest.spyOn(utils, 'getActiveMavenVersion').mockResolvedValue(version.active);
+      const spySetup = jest.spyOn(installer, 'setupMaven').mockResolvedValue(version.setup);
+
+      await run();
+      expect(spySetup).toHaveBeenCalledWith(...expected);
+      expect(core.setOutput).toHaveBeenCalledWith('version', version.setup);
+    }
+  );
+});
+
+describe('integration tests', () => {
+  const ORIGINAL_PATH = process.env.PATH;
+  const TEST_VERSION = '3.1.1';
+  const TOOL_PATH = path.join(CACHE_PATH, 'maven', TEST_VERSION, os.arch());
+
+  process.env.RUNNER_TEMP = os.tmpdir();
+  process.env.RUNNER_TOOL_CACHE = CACHE_PATH;
+
+  beforeEach(() => {
+    process.env.PATH = `${MVN_PATH}${path.delimiter}${ORIGINAL_PATH ?? ''}`;
+  });
+
+  afterEach(async () => {
+    process.env.PATH = ORIGINAL_PATH;
+    await fs.rmdir(CACHE_PATH, { recursive: true });
+  });
+
+  it('uses system Maven if real version =~ default version', async () => {
     (core.getInput as jest.Mock).mockReturnValue('');
-    (getActiveMavenVersion as jest.Mock).mockResolvedValue(undefined);
-    (setupMaven as jest.Mock).mockResolvedValue('foo');
 
     await run();
-    expect(setupMaven).toHaveBeenCalledWith(DEFAULT_VERSION, undefined);
-    expect(core.setOutput).toHaveBeenCalledWith('version', 'foo');
+    expect(core.addPath).not.toHaveBeenCalled();
+    expect(core.setOutput).toHaveBeenCalledWith('version', REAL_VERSION);
   });
 
-  it('setups when installed Maven is different with version input', async () => {
-    (core.getInput as jest.Mock).mockReturnValue('3.3');
-    (getActiveMavenVersion as jest.Mock).mockResolvedValue('3.5.2');
-    (setupMaven as jest.Mock).mockResolvedValue(DEFAULT_VERSION);
+  it('install and cache a specific Maven version', async () => {
+    (core.getInput as jest.Mock).mockReturnValue(' ~3.1.0');
 
     await run();
-    expect(setupMaven).toHaveBeenCalledWith('3.3', undefined);
-    expect(core.setOutput).toHaveBeenCalledWith('version', DEFAULT_VERSION);
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`Downloading Maven ${TEST_VERSION} from`, 'i'))
+    );
+
+    expect(core.addPath).toHaveBeenCalledWith(path.join(TOOL_PATH, 'bin'));
+    expect(core.setOutput).toHaveBeenCalledWith('version', TEST_VERSION);
+
+    expect(existsSync(`${TOOL_PATH}.complete`)).toBe(true);
   });
 
-  it('setups when installed Maven is correspond with version input', async () => {
-    (core.getInput as jest.Mock).mockReturnValue('3.x');
-    (getActiveMavenVersion as jest.Mock).mockResolvedValue('3.3.9');
-    (setupMaven as jest.Mock).mockResolvedValue('');
+  it('uses system Maven if real version > cached version', async () => {
+    await fs.mkdir(TOOL_PATH, { recursive: true });
+    await fs.writeFile(`${TOOL_PATH}.complete`, '');
+    (core.getInput as jest.Mock).mockReturnValue('3.x ');
 
     await run();
-    expect(setupMaven).toHaveBeenCalledWith('3.x', '3.3.9');
-    expect(core.setOutput).toHaveBeenCalledWith('version', '');
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringMatching(
+        new RegExp(`Use.* version ${REAL_VERSION} instead of.* ${TEST_VERSION}`, 'i')
+      )
+    );
+
+    expect(core.addPath).not.toHaveBeenCalled();
+    expect(core.setOutput).toHaveBeenCalledWith('version', REAL_VERSION);
   });
 });

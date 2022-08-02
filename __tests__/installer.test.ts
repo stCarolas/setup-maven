@@ -1,17 +1,27 @@
-/* eslint @typescript-eslint/consistent-type-imports: 0 */
 import * as os from 'os';
 import * as path from 'path';
-import { IncomingMessage } from 'http';
+import { existsSync, promises as fs } from 'fs';
 
 import * as core from '@actions/core';
-import { HttpClient, HttpCodes } from '@actions/http-client';
+import * as hm from '@actions/http-client';
+import * as tc from '@actions/tool-cache';
 
 import * as installer from '../src/installer';
+import { getVersionFromToolcachePath } from '../src/utils';
 
 // Mocking modules
 jest.mock('@actions/core');
 
 const CACHE_PATH = path.join(__dirname, 'runner');
+
+function mockHttpClientGet(responseBody: string, statusCode = hm.HttpCodes.OK): void {
+  jest.spyOn(hm, 'HttpClient').mockReturnValue(({
+    get: jest.fn().mockResolvedValue({
+      message: { statusCode, statusMessage: '' },
+      readBody: jest.fn().mockResolvedValue(responseBody)
+    })
+  } as unknown) as hm.HttpClient);
+}
 
 function createXmlManifest(...versions: readonly string[]): string {
   return versions.map(ver => `<version>${ver}</version>`).join();
@@ -32,10 +42,7 @@ describe('getAvailableVersions', () => {
   });
 
   it('failed to download versions manifest', async () => {
-    jest.spyOn(HttpClient.prototype, 'get').mockResolvedValue({
-      message: ({ statusCode: 0 } as unknown) as IncomingMessage,
-      readBody: jest.fn().mockResolvedValue('')
-    });
+    mockHttpClientGet('', 0);
 
     await expect(installer.getAvailableVersions()).rejects.toThrow(
       /Unable to get available versions from/i
@@ -48,10 +55,7 @@ describe('getAvailableVersions', () => {
       [` bar${createXmlManifest('')} foo`, []],
       [` ${createXmlManifest(' 1.x', 'foo')}!`, [' 1.x', 'foo']]
     ])('%s -> %j', async (xml: string, expected: readonly string[]) => {
-      jest.spyOn(HttpClient.prototype, 'get').mockResolvedValue({
-        message: ({ statusCode: HttpCodes.OK } as unknown) as IncomingMessage,
-        readBody: jest.fn().mockResolvedValue(xml)
-      });
+      mockHttpClientGet(xml);
 
       const availableVersions = await installer.getAvailableVersions();
       expect(availableVersions).toStrictEqual(expected);
@@ -69,10 +73,7 @@ describe('findVersionForDownload', () => {
       ['* ', ['foo', ' ', ' 1.0.x ', '3.0']],
       [' >=3', [' 2.0.1', '!', ' 3.0.x ', '3.3']]
     ])('%s %j', async (spec: string, versions: readonly string[]) => {
-      jest.spyOn(HttpClient.prototype, 'get').mockResolvedValue({
-        message: ({ statusCode: HttpCodes.OK } as unknown) as IncomingMessage,
-        readBody: jest.fn().mockResolvedValue(createXmlManifest(...versions))
-      });
+      mockHttpClientGet(createXmlManifest(...versions));
 
       await expect(installer.findVersionForDownload(spec)).rejects.toThrow(
         new RegExp(`not find.* version for.* ${spec}`, 'i')
@@ -86,10 +87,7 @@ describe('findVersionForDownload', () => {
       [' * ', ['!', '1.0.1', ' 3.1.0 ', '2.0.1 ', '3.3.0-alpha-1'], '3.1.0'],
       ['>=1 ', [' ', '1.1.0-beta-1', ' 1.0.1 ', ' 1.0.1-1'], '1.0.1']
     ])('%s %j -> %s', async (spec: string, versions: readonly string[], expected: string) => {
-      jest.spyOn(HttpClient.prototype, 'get').mockResolvedValue({
-        message: ({ statusCode: HttpCodes.OK } as unknown) as IncomingMessage,
-        readBody: jest.fn().mockResolvedValue(createXmlManifest(...versions))
-      });
+      mockHttpClientGet(createXmlManifest(...versions));
 
       const resolvedVersion = await installer.findVersionForDownload(spec);
       expect(resolvedVersion).toBe(expected);
@@ -98,13 +96,100 @@ describe('findVersionForDownload', () => {
   });
 });
 
-process.env.RUNNER_TEMP = os.tmpdir();
-process.env.RUNNER_TOOL_CACHE = CACHE_PATH;
+describe('download & setup Maven', () => {
+  process.env.RUNNER_TEMP = os.tmpdir();
+  process.env.RUNNER_TOOL_CACHE = CACHE_PATH;
 
-describe('downloadMaven', () => {
-  it.todo('download a real version of Maven');
+  afterEach(async () => {
+    await fs.rmdir(CACHE_PATH, { recursive: true });
+  });
 
-  it.todo('raises error if download failed');
+  describe('downloadMaven', () => {
+    const TEST_VERSION = '3.3.3';
 
-  it.todo('raises error when extracting failed');
+    it('download a real version of Maven', async () => {
+      const toolPath = await installer.downloadMaven(TEST_VERSION);
+
+      expect(core.info).toHaveBeenCalledWith(
+        expect.stringMatching(new RegExp(`Downloading Maven ${TEST_VERSION} from`, 'i'))
+      );
+
+      expect(existsSync(`${toolPath}.complete`)).toBe(true);
+      expect(existsSync(path.join(CACHE_PATH, 'maven', TEST_VERSION))).toBe(true);
+      expect(getVersionFromToolcachePath(toolPath)).toBe(TEST_VERSION);
+    });
+
+    it('raises error if download failed', async () => {
+      mockHttpClientGet('', 1);
+      await expect(installer.downloadMaven(TEST_VERSION)).rejects.toThrow(/Unexpected HTTP.* 1/i);
+
+      expect(core.info).toHaveBeenCalledTimes(1);
+      expect(core.debug).toHaveBeenCalledWith(
+        expect.stringMatching(/Failed to download.* Code\(1\)/i)
+      );
+    });
+
+    it('raises error when extracting failed', async () => {
+      const spyDownload = jest.spyOn(tc, 'downloadTool').mockResolvedValue(__filename);
+
+      await expect(installer.downloadMaven(TEST_VERSION)).rejects.toThrow(/failed.* exit code 1/i);
+
+      expect(spyDownload).toHaveBeenCalledWith(expect.stringContaining(TEST_VERSION));
+      expect(core.debug).toHaveBeenCalledWith(expect.stringContaining('tar'));
+    });
+  });
+
+  describe('setupMaven', () => {
+    const TEST_VERSION = '3.2.5';
+    const TOOL_PATH = path.join(CACHE_PATH, 'maven', TEST_VERSION, os.arch());
+
+    beforeEach(async () => {
+      await fs.mkdir(TOOL_PATH, { recursive: true });
+      await fs.writeFile(`${TOOL_PATH}.complete`, '');
+    });
+
+    describe('reuses the cached version of Maven', () => {
+      it.each([
+        [TEST_VERSION, TEST_VERSION.replace(/\d+$/, 'x '), undefined],
+        [TEST_VERSION, TEST_VERSION.replace(/\.\d+$/, ''), TEST_VERSION.replace(/\d+$/, '0 ')]
+      ])('%s <- %s', async (expected: string, spec: string, active?: string) => {
+        const resolvedVersion = await installer.setupMaven(spec, active);
+
+        expect(resolvedVersion).toBe(expected);
+        expect(core.addPath).toHaveBeenCalledWith(
+          expect.stringMatching(new RegExp(`\\b${expected}\\b.*[\\\\/]bin$`))
+        );
+      });
+    });
+
+    describe('uses version of system Maven', () => {
+      it.each([
+        [' 3.8', '3.8.2', ''],
+        ['3.x ', '3.3.9', TEST_VERSION]
+      ])('%s -> %s', async (spec: string, expected: string, resolved: string) => {
+        const resolvedVersion = await installer.setupMaven(spec, expected);
+
+        expect(resolvedVersion).toBe(expected);
+        expect(core.info).toHaveBeenCalledWith(
+          expect.stringMatching(new RegExp(`Use.* ${expected} instead of .*\\b${resolved}`, 'i'))
+        );
+        expect(core.addPath).not.toHaveBeenCalled();
+      });
+    });
+
+    it('install a new version of Maven', async () => {
+      const expected = '3.6.3';
+      mockHttpClientGet(createXmlManifest('3.5.2 ', ` ${expected}`, '3.6.1'));
+
+      jest.spyOn(tc, 'downloadTool').mockResolvedValue('');
+      jest.spyOn(tc, 'extractTar').mockResolvedValue('');
+      const spyCache = jest.spyOn(tc, 'cacheDir').mockResolvedValue('foo');
+
+      const resolvedVersion = await installer.setupMaven(' >3.5');
+
+      expect(spyCache).toHaveBeenCalledWith(expect.stringContaining(expected), 'maven', expected);
+      expect(resolvedVersion).toBe(expected);
+      expect(core.addPath).toHaveBeenCalledWith(path.join('foo', 'bin'));
+    });
+  });
 });

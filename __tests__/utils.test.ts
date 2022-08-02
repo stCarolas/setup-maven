@@ -11,6 +11,7 @@ jest.mock('child_process');
 jest.mock('@actions/core');
 
 const MVN_PATH = path.join(__dirname, 'data');
+const REAL_VERSION = '3.5.2';
 
 describe('getVersionFromToolcachePath', () => {
   it.each([
@@ -34,7 +35,6 @@ describe('getActiveMavenVersion', () => {
   });
 
   it('gets real version by `mvn` command', async () => {
-    const expectedVersion = '3.5.2';
     process.env.PATH = `${MVN_PATH}${path.delimiter}${ORIGINAL_PATH ?? ''}`;
 
     const cp = jest.requireActual<typeof child>('child_process');
@@ -42,9 +42,9 @@ describe('getActiveMavenVersion', () => {
 
     const installedVersion = await getActiveMavenVersion();
 
-    expect(installedVersion).toBe(expectedVersion);
+    expect(installedVersion).toBe(REAL_VERSION);
     expect(core.debug).toHaveBeenCalledWith(
-      expect.stringMatching(new RegExp(`Retrieved.* version: ${expectedVersion}`, 'i'))
+      expect.stringMatching(new RegExp(`Retrieved.* version: ${REAL_VERSION}`, 'i'))
     );
   });
 
@@ -75,7 +75,7 @@ describe('getActiveMavenVersion', () => {
   it('returns empty if `mvn` command is incorrect', async () => {
     process.env.PATH = MVN_PATH;
 
-    const cp = Object.create(new EventEmitter()) as EventEmitter & { stdout: EventEmitter };
+    const cp = (new EventEmitter() as unknown) as EventEmitter & { stdout: EventEmitter };
     (child.spawn as jest.Mock).mockReturnValue((cp.stdout = cp));
 
     setTimeout(() => cp.emit('data', 'foo') && cp.emit('close', 0), EMIT_AT);
