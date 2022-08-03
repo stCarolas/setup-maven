@@ -1,17 +1,38 @@
-### How To Use
+# setup-maven
 
-Add this step into workflow
+[![Build Action](https://github.com/thachnn/setup-maven/actions/workflows/build.yml/badge.svg)](https://github.com/thachnn/setup-maven/actions/workflows/build.yml)
+[![Integration Tests](https://github.com/thachnn/setup-maven/actions/workflows/tests.yml/badge.svg)](https://github.com/thachnn/setup-maven/actions/workflows/tests.yml)
+
+This action provides the following functionality for GitHub Actions runners:
+
+- Optionally downloading and caching a requested version of Maven, and adding it to the PATH
+- The requested version supports an exact version or a version range using [SemVer](https://semver.org/) notation
+
+## Usage
+
+See [action.yml](action.yml)
+
+**Basic:**
 
 ```yaml
-jobs:
-  ...
-  steps:
-
-    - name: Set up Maven
-      uses: stCarolas/setup-maven@v5
-      with:
-        maven-version: 3.8
+steps:
+  - name: Set up Maven
+    uses: thachnn/setup-maven@v5
+    with:
+      maven-version: 3.8
 ```
+
+The `maven-version` input is optional. If not supplied, the maven version from PATH will be used.
+
+### Supported version syntax
+
+The `maven-version` input supports the [Semantic Versioning Specification](https://github.com/npm/node-semver), examples:
+
+- Major versions: `2`, `3`
+- More specific versions: `3.2`, `3.3.9`, `3.5.x`, `~3.8.2`, `>=3.3.3`
+- Latest release: `*`
+
+## Contributing
 
 ### Development using [Docker](https://docs.docker.com/)
 
@@ -43,3 +64,7 @@ docker run --rm -it --link docker-sonarqube -v "%PWD%:/usr/src/app" -w /usr/src/
   -e "SONAR_HOST_URL=http://docker-sonarqube:9000" -e "SONAR_LOGIN=<projectToken>" sonarsource/sonar-scanner-cli ^
   -Dsonar.projectKey=setup-maven -Dsonar.sources=. "-Dsonar.exclusions=dist/**,lib/**"
 ```
+
+## License
+
+The scripts and documentation in this project are released under the `MIT License`
