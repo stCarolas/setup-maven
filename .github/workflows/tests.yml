@@ -28,7 +28,7 @@ jobs:
           java-version: 8
           distribution: temurin
       - name: Setup Maven ${{ matrix.version }}
-        uses: .
+        uses: ./
         id: setup-maven
         with:
           maven-version: ${{ matrix.version }}
