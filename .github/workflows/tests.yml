@@ -28,8 +28,8 @@ jobs:
           java-version: 8
           distribution: temurin
       - name: Setup Maven ${{ matrix.version }}
+        uses: .
         id: setup-maven
-        uses: thachnn/setup-maven@${{ github.ref_name }}
         with:
           maven-version: ${{ matrix.version }}
       - if: steps.setup-maven.outputs.version != matrix.expected

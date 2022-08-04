@@ -105,7 +105,7 @@ describe('integration tests', () => {
     await run();
     expect(core.info).toHaveBeenCalledWith(
       expect.stringMatching(
-        new RegExp(`Use.* version ${REAL_VERSION} instead of.* ${TEST_VERSION}`, 'i')
+        new RegExp(`Use.* version ${REAL_VERSION} instead of.* ${TEST_VERSION.charAt(0)}\\.`, 'i')
       )
     );
 
