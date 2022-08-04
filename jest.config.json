@@ -1,0 +1,12 @@
+{
+  "clearMocks": true,
+  "restoreMocks": true,
+  "moduleFileExtensions": ["ts", "js"],
+  "testEnvironment": "node",
+  "testMatch": ["**/*.test.ts"],
+  "transform": {
+    "\\.ts$": "ts-jest"
+  },
+  "testTimeout": 15000,
+  "verbose": true
+}

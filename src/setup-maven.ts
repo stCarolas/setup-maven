@@ -1,15 +1,5 @@
-import * as core from '@actions/core';
-import * as installer from './installer';
+/* eslint @typescript-eslint/no-floating-promises: 0 */
+import { run } from './main';
 
-async function run() {
-  try {
-    let version = core.getInput('maven-version');
-    if (version) {
-      await installer.getMaven(version);
-    }
-  } catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
+// noinspection JSIgnoredPromiseFromCall
 run();
