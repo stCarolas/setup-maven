@@ -72,7 +72,7 @@
       "plugins": ["jest"],
       "extends": ["plugin:jest/all"],
       "rules": {
-        "max-lines-per-function": ["warn", 100],
+        "max-lines-per-function": ["warn", 120],
         "jest/no-hooks": "off",
         "jest/prefer-expect-assertions": "off"
       }

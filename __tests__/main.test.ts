@@ -1,6 +1,6 @@
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { existsSync, promises as fs } from 'fs';
 
 import * as core from '@actions/core';
 
@@ -67,9 +67,12 @@ describe('integration tests', () => {
     process.env.PATH = `${MVN_PATH}${path.delimiter}${ORIGINAL_PATH ?? ''}`;
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     process.env.PATH = ORIGINAL_PATH;
-    await fs.rmdir(CACHE_PATH, { recursive: true });
+
+    if (fs.existsSync(TOOL_PATH)) {
+      fs.rmdirSync(path.dirname(TOOL_PATH), { recursive: true });
+    }
   });
 
   it('uses system Maven if real version =~ default version', async () => {
@@ -91,12 +94,12 @@ describe('integration tests', () => {
     expect(core.addPath).toHaveBeenCalledWith(path.join(TOOL_PATH, 'bin'));
     expect(core.setOutput).toHaveBeenCalledWith('version', TEST_VERSION);
 
-    expect(existsSync(`${TOOL_PATH}.complete`)).toBe(true);
+    expect(fs.existsSync(`${TOOL_PATH}.complete`)).toBe(true);
   });
 
   it('uses system Maven if real version > cached version', async () => {
-    await fs.mkdir(TOOL_PATH, { recursive: true });
-    await fs.writeFile(`${TOOL_PATH}.complete`, '');
+    fs.mkdirSync(TOOL_PATH, { recursive: true });
+    fs.writeFileSync(`${TOOL_PATH}.complete`, '');
     (core.getInput as jest.Mock).mockReturnValue('3.x ');
 
     await run();

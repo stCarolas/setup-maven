@@ -1,6 +1,6 @@
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { existsSync, promises as fs } from 'fs';
 
 import * as core from '@actions/core';
 import * as hm from '@actions/http-client';
@@ -100,12 +100,15 @@ describe('download & setup Maven', () => {
   process.env.RUNNER_TEMP = os.tmpdir();
   process.env.RUNNER_TOOL_CACHE = CACHE_PATH;
 
-  afterEach(async () => {
-    await fs.rmdir(CACHE_PATH, { recursive: true });
-  });
-
   describe('downloadMaven', () => {
     const TEST_VERSION = '3.3.3';
+    const TOOL_PATH = path.join(CACHE_PATH, 'maven', TEST_VERSION);
+
+    afterEach(() => {
+      if (fs.existsSync(TOOL_PATH)) {
+        fs.rmdirSync(TOOL_PATH, { recursive: true });
+      }
+    });
 
     it('download a real version of Maven', async () => {
       const toolPath = await installer.downloadMaven(TEST_VERSION);
@@ -114,8 +117,8 @@ describe('download & setup Maven', () => {
         expect.stringMatching(new RegExp(`Downloading Maven ${TEST_VERSION} from`, 'i'))
       );
 
-      expect(existsSync(`${toolPath}.complete`)).toBe(true);
-      expect(existsSync(path.join(CACHE_PATH, 'maven', TEST_VERSION))).toBe(true);
+      expect(fs.existsSync(`${toolPath}.complete`)).toBe(true);
+      expect(fs.existsSync(TOOL_PATH)).toBe(true);
       expect(getVersionFromToolcachePath(toolPath)).toBe(TEST_VERSION);
     });
 
@@ -132,7 +135,9 @@ describe('download & setup Maven', () => {
     it('raises error when extracting failed', async () => {
       const spyDownload = jest.spyOn(tc, 'downloadTool').mockResolvedValue(__filename);
 
-      await expect(installer.downloadMaven(TEST_VERSION)).rejects.toThrow(/failed.* exit code 1/i);
+      await expect(installer.downloadMaven(TEST_VERSION)).rejects.toThrow(
+        /process .*tar.* failed.* exit code [1-2]/i
+      );
 
       expect(spyDownload).toHaveBeenCalledWith(expect.stringContaining(TEST_VERSION));
       expect(core.debug).toHaveBeenCalledWith(expect.stringContaining('tar'));
@@ -143,9 +148,15 @@ describe('download & setup Maven', () => {
     const TEST_VERSION = '3.2.5';
     const TOOL_PATH = path.join(CACHE_PATH, 'maven', TEST_VERSION, os.arch());
 
-    beforeEach(async () => {
-      await fs.mkdir(TOOL_PATH, { recursive: true });
-      await fs.writeFile(`${TOOL_PATH}.complete`, '');
+    beforeEach(() => {
+      fs.mkdirSync(TOOL_PATH, { recursive: true });
+      fs.writeFileSync(`${TOOL_PATH}.complete`, '');
+    });
+
+    afterEach(() => {
+      if (fs.existsSync(TOOL_PATH)) {
+        fs.rmdirSync(path.dirname(TOOL_PATH), { recursive: true });
+      }
     });
 
     describe('reuses the cached version of Maven', () => {
