@@ -19,21 +19,34 @@ if (!tempDirectory) {
   tempDirectory = path.join(baseLocation, 'actions', 'temp');
 }
 
-export async function getMaven(version: string) {
+export async function getMaven(version: string, mirror: string) {
   let toolPath: string;
   toolPath = tc.find('maven', version);
 
   if (!toolPath) {
-    toolPath = await downloadMaven(version);
+    toolPath = await downloadMaven(version, mirror);
   }
 
   toolPath = path.join(toolPath, 'bin');
   core.addPath(toolPath);
 }
 
-async function downloadMaven(version: string): Promise<string> {
+function get_server_url(mirror: string) {
+  if (mirror && (mirror.indexOf("http") === 0)) {
+    return mirror;
+  }
+  switch (mirror) {
+    case "aliyun":
+      return "https://maven.aliyun.com/repository/public";
+    default:
+      break;
+  }
+  return "https://repo.maven.apache.org/maven2";
+}
+
+async function downloadMaven(version: string, mirror: string): Promise<string> {
   const toolDirectoryName = `apache-maven-${version}`;
-  const downloadUrl = `https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${version}/apache-maven-${version}-bin.tar.gz`;
+  const downloadUrl = `${get_server_url(mirror)}/org/apache/maven/apache-maven/${version}/apache-maven-${version}-bin.tar.gz`;
   console.log(`downloading ${downloadUrl}`);
 
   try {
